@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 CORS(app) 
 
-# An gyara sunan variable zuwa TERMII_API_KEY don ya dace da Render
+# Wannan zai karba daga Render Environment
 TERMII_KEY = os.environ.get("TERMII_API_KEY") 
 
 @app.route("/api/send-otp", methods=["POST"])
@@ -28,6 +28,8 @@ def send_otp():
         return jsonify({"error": "Internal Server Error: API Key not configured"}), 500
 
     url = "https://api.ng.termii.com/api/sms/otp/send"
+    
+    # Payload din da Termii yake bukata
     payload = {
         "api_key": TERMII_KEY, 
         "to": phone,
@@ -39,12 +41,20 @@ def send_otp():
         "message_type": "NUMERIC"
     }
     
+    # Headers da ake bukata don tabbatar da cewa JSON ne
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
     print(f"Sending to Termii: {phone}") 
+    
     try:
-        r = requests.post(url, json=payload)
+        # Aika request tare da headers
+        r = requests.post(url, json=payload, headers=headers)
         print(f"TERMII SAYS: {r.text}")
         return jsonify(r.json())
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/")
