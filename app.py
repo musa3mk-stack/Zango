@@ -7,47 +7,30 @@ app = Flask(__name__)
 CORS(app)
 
 TERMII_KEY = os.environ.get("TERMII_KEY")
-TERMII_URL = "https://api.ng.termii.com/api/sms/otp/send"
-TERMII_VERIFY_URL = "https://api.ng.termii.com/api/sms/otp/verify"
+print("==================================")
+print("KEY LOADED:", TERMII_KEY) # Dole sai mu ga tlv_u... a logs
+print("==================================")
 
 @app.route("/")
 def home():
-    return {"status": "Zango Backend is running ✅"}
+    return {"status": "running", "key_exists": bool(TERMII_KEY)}
 
 @app.route("/api/send-otp", methods=["POST"])
 def send_otp():
-    data = request.json
-    phone = data.get("phone")
+    phone = request.json.get("phone")
+    print("PHONE:", phone, "KEY:", TERMII_KEY[:5] if TERMII_KEY else "NONE")
     
+    url = "https://api.ng.termii.com/api/sms/otp/send"
     payload = {
         "api_key": TERMII_KEY,
         "to": phone,
         "from": "Zango",
-        "sms": "Zango code",
-        "type": "plain",
+        "sms": "Zango code < 1234 >",
         "channel": "generic",
-        "pin_attempts": 3,
         "pin_time_to_live": 5,
         "pin_length": 4,
-        "pin_placeholder": "< 1234 >",
         "message_type": "NUMERIC"
     }
-    
-    headers = {"Content-Type": "application/json"}
-    res = requests.post(TERMII_URL, json=payload, headers=headers)
-    return jsonify(res.json())
-
-@app.route("/api/verify-otp", methods=["POST"])
-def verify_otp():
-    data = request.json
-    payload = {
-        "api_key": TERMII_KEY,
-        "pin_id": data.get("pin_id"),
-        "pin": data.get("pin")
-    }
-    headers = {"Content-Type": "application/json"}
-    res = requests.post(TERMII_VERIFY_URL, json=payload, headers=headers)
-    return jsonify(res.json())
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    r = requests.post(url, json=payload)
+    print("TERMII RESPONSE:", r.json()) # Wannan zai nuna mana kuskuren Termii
+    return jsonify(r.json())
